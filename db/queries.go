@@ -38,11 +38,8 @@ func GetAuthor(id int64) Author {
 	return retrievedAuthor
 }
 
-func UpdateAuthor(name string, bio sql.NullString) Author {
-	updatedUser, err := queries.UpdateAuthor(ctx, UpdateAuthorParams{
-		Name: name,
-		Bio:  bio,
-	})
+func UpdateAuthor(params UpdateAuthorParams) Author {
+	updatedUser, err := queries.UpdateAuthor(ctx, params)
 	if err != nil {
 		log.Fatal(err)
 	}
