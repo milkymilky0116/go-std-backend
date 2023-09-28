@@ -1,26 +1,22 @@
 package main
 
 import (
-	"log"
-	"os"
-	"text/template"
+	"database/sql"
+	"fmt"
+
+	"github.com/milkymilky0116/go-std-backend/db"
 )
 
-var tmp *template.Template
-
-func init() {
-	tmp = template.Must(template.ParseGlob("templates/*.gohtml"))
-}
 func main() {
-	err := tmp.ExecuteTemplate(os.Stdout, "one.gohtml", "one")
-	handleErr(err)
-	err = tmp.ExecuteTemplate(os.Stdout, "two.gohtml", "two")
-	handleErr(err)
-	err = tmp.ExecuteTemplate(os.Stdout, "three.gohtml", "three")
-	handleErr(err)
-}
-func handleErr(err error) {
-	if err != nil {
-		log.Fatal(err)
+	newUser := db.CreateAuthor("Milky", sql.NullString{String: "This is test.", Valid: true})
+	secondUser := db.CreateAuthor("James", sql.NullString{String: "go with sqlc", Valid: true})
+	fmt.Println(db.GetAuthor(newUser.ID).Bio)
+	fmt.Println(db.GetAuthor(secondUser.ID).Name)
+
+	users := db.ListAuthors()
+
+	for _, user := range users {
+		fmt.Printf("ID: %d - Name: %s - Bio: %s\n", user.ID, user.Name, user.Bio.String)
 	}
+
 }
