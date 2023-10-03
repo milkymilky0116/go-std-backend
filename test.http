@@ -1,0 +1,14 @@
+GET http://localhost:4000/gists/view
+
+###
+GET http://localhost:4000/gists/view/10
+
+###
+
+GET http://localhost:4000/gists/create
+
+###
+
+POST http://localhost:4000/gists/create
+
+###
