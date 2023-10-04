@@ -3,6 +3,7 @@ package web
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -10,7 +11,7 @@ import (
 )
 
 func (app *Application) Home(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "This is main page.")
+	http.Redirect(w, r, "/gists/view", http.StatusPermanentRedirect)
 }
 
 func (app *Application) ViewOneGists(w http.ResponseWriter, r *http.Request) {
@@ -20,22 +21,24 @@ func (app *Application) ViewOneGists(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			app.ServerError(w, err)
 		}
-		gist := findGist(id)
-		if gist != (Gist{}) {
-			marshaledGist, err := json.Marshal(gist)
-			if err != nil {
-				app.ServerError(w, err)
-			}
-			fmt.Fprint(w, string(marshaledGist))
-		} else {
-			app.NotFound(w)
+		gist, err := app.findGist(id)
+		if err != nil {
+			app.ServerError(w, err)
 		}
+		marshaledGist, err := json.Marshal(gist)
+		if err != nil {
+			app.ServerError(w, err)
+		}
+		fmt.Fprint(w, string(marshaledGist))
 	}
 
 }
 
 func (app *Application) ViewAllGists(w http.ResponseWriter, r *http.Request) {
-	gists := listGist()
+	gists, err := app.listGist()
+	if err != nil {
+		app.ServerError(w, err)
+	}
 	marshaledGistList, err := json.Marshal(gists)
 	if err != nil {
 		app.ServerError(w, err)
@@ -44,12 +47,33 @@ func (app *Application) ViewAllGists(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Application) CreateGist(w http.ResponseWriter, r *http.Request) {
+	var gistParams GistParam
 	if r.Method != http.MethodPost {
 		w.Header().Add("Allow", http.MethodPost)
 		app.ClientError(w, http.StatusMethodNotAllowed)
 		return
 	}
-	fmt.Fprint(w, "Create gist....")
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		app.ServerError(w, err)
+	}
+
+	err = json.Unmarshal(b, &gistParams)
+	if err != nil {
+		app.ServerError(w, err)
+	}
+
+	newGist, err := app.appendGist(gistParams)
+	if err != nil {
+		app.ClientError(w, http.StatusMisdirectedRequest)
+	}
+
+	marshaledGist, err := json.Marshal(newGist)
+	if err != nil {
+		app.ServerError(w, err)
+	}
+
+	fmt.Fprint(w, string(marshaledGist))
 }
 
 func (app *Application) InitRoutes(mux *mux.Router) *mux.Router {

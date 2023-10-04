@@ -1,6 +1,7 @@
 package web
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,8 +11,12 @@ import (
 type Application struct {
 	ServerLogger *log.Logger
 	ErrorLogger  *log.Logger
+	DB           *sql.DB
 }
 
+func (app *Application) Logger(w http.ResponseWriter, context string) {
+	app.ServerLogger.Output(1, context)
+}
 func (app *Application) ServerError(w http.ResponseWriter, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
 	app.ErrorLogger.Output(2, trace)
