@@ -3,64 +3,61 @@ package web
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
 )
 
-var gists = GistsList()
-
-func Home(w http.ResponseWriter, r *http.Request) {
+func (app *Application) Home(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "This is main page.")
 }
 
-func ViewOneGists(w http.ResponseWriter, r *http.Request) {
+func (app *Application) ViewOneGists(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if vars != nil {
 		id, err := strconv.Atoi(vars["id"])
 		if err != nil {
-			log.Fatal(err)
+			app.ServerError(w, err)
 		}
-		for _, gist := range gists {
-			if gist.Id == id {
-				marshaledGist, err := json.Marshal(gist)
-				if err != nil {
-					log.Fatal(err)
-				}
-				fmt.Fprint(w, string(marshaledGist))
-				return
+		gist := findGist(id)
+		if gist != (Gist{}) {
+			marshaledGist, err := json.Marshal(gist)
+			if err != nil {
+				app.ServerError(w, err)
 			}
+			fmt.Fprint(w, string(marshaledGist))
+		} else {
+			app.NotFound(w)
 		}
-		http.Error(w, "Gist Not Found", http.StatusNotFound)
 	}
 
 }
 
-func ViewAllGists(w http.ResponseWriter, r *http.Request) {
-	gists, err := json.Marshal(gists)
+func (app *Application) ViewAllGists(w http.ResponseWriter, r *http.Request) {
+	gists := listGist()
+	marshaledGistList, err := json.Marshal(gists)
 	if err != nil {
-		log.Fatal(err)
+		app.ServerError(w, err)
 	}
-	fmt.Fprint(w, string(gists))
+	fmt.Fprint(w, string(marshaledGistList))
 }
 
-func CreateGist(w http.ResponseWriter, r *http.Request) {
+func (app *Application) CreateGist(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Add("Allow", http.MethodPost)
-		log.Println("Only POST Method Allowed.")
+		app.ClientError(w, http.StatusMethodNotAllowed)
 		return
 	}
 	fmt.Fprint(w, "Create gist....")
 }
 
-func InitRoutes(mux *mux.Router) *mux.Router {
+func (app *Application) InitRoutes(mux *mux.Router) *mux.Router {
 
-	mux.HandleFunc("/", Home)
-	mux.HandleFunc("/gists/view", ViewAllGists)
-	mux.HandleFunc("/gists/view/{id:[0-9]+}", ViewOneGists)
-	mux.HandleFunc("/gists/create", CreateGist)
+	mux.HandleFunc("/", app.Home)
+	mux.HandleFunc("/gists/view", app.ViewAllGists)
+	mux.HandleFunc("/gists/view/{id:[0-9]+}", app.ViewOneGists)
+	mux.HandleFunc("/gists/create", app.CreateGist)
 
 	return mux
 }
