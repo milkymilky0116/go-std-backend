@@ -1,11 +1,11 @@
-GET http://localhost:4000/
+GET http://localhost:4000/api/
 
 ###
-GET http://localhost:4000/gists/view/2
+GET http://localhost:4000/api/gists/view
 
 ###
 
-GET http://localhost:4000/gists/view/4
+GET http://localhost:4000/api/gists/view/4
 
 ###
 
@@ -20,8 +20,8 @@ GET http://localhost:4000/gists/create
 POST http://localhost:4000/gists/create
 
 {
-    "title" : "Hello this is another gist",
-    "content" : "wow!",
-    "writer" : 1
+    "title" : "I love golang",
+    "content" : "i want to learn it more",
+    "writer" : 2
 }
 ###

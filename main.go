@@ -1,20 +1,20 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/fatih/color"
-	"github.com/gorilla/mux"
 	"github.com/milkymilky0116/go-std-backend/cmd/cli"
 	"github.com/milkymilky0116/go-std-backend/cmd/db"
 	"github.com/milkymilky0116/go-std-backend/cmd/web"
+	"github.com/milkymilky0116/go-std-backend/internal/models"
 )
 
 func main() {
 
-	mux := mux.NewRouter()
 	blue := color.New(color.BgBlue).SprintFunc()
 	red := color.New(color.BgRed).SprintFunc()
 
@@ -33,19 +33,31 @@ func main() {
 	infoLog.Println("DB Connected!")
 	defer db.Close()
 	app := &web.Application{
-		ServerLogger: infoLog,
-		ErrorLogger:  errorLog,
-		DB:           db,
+		ServerLogger:   infoLog,
+		ErrorLogger:    errorLog,
+		Gists:          &models.GistModel{DB: db},
+		Users:          &models.UserModel{DB: db},
+		IsTemplateMode: c.IsTemplateMode,
 	}
-	mux.Use(app.ContentTypeHeader)
+	mux := app.InitRoutes()
+	defaultMode := "API Mode"
+	if app.IsTemplateMode {
+		defaultMode = "Template Mode"
+		templateCache, err := web.NewTemplateCache()
+		if err != nil {
+			errorLog.Fatal(err)
+		}
+		app.TemplateCache = templateCache
+	}
 	mux.Use(app.HTTPLogger)
 	srv := &http.Server{
 		Addr:     ":4000",
 		ErrorLog: errorLog,
-		Handler:  app.InitRoutes(mux),
+		Handler:  mux,
 	}
-	infoLog.Println("Server Starting on :4000")
 
+	startLog := fmt.Sprintf("Server Starting on :4000 / %s", defaultMode)
+	infoLog.Println(startLog)
 	err = srv.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)

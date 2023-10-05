@@ -1,0 +1,18 @@
+{{define "title"}}Gist #{{.Gist.Id}}{{end}} {{define "main"}} {{with .Gist}}
+<div>
+  <div>
+    <strong><h2>{{.Title}}</h2></strong>
+    <span>#{{.Id}}</span>
+    <span>Writer: {{.Writer.Name}}</span>
+  </div>
+  <pre><code>{{.Content}}</code></pre>
+  <div class="metadata">
+    <div>
+      <time>Created: {{humanDate .CreatedAt}}</time>
+    </div>
+    <div>
+      <time>Last Updated: {{humanDate .UpdatedAt}}</time>
+    </div>
+  </div>
+</div>
+{{end}} {{end}}

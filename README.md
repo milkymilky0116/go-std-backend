@@ -2,6 +2,8 @@
 
 # Usage of Gist:
 
+- _-tmp_ boolean
+  - Whether running application on Template Mode
 - _-dbname_ string
   - Database Name
 - _-password_ string

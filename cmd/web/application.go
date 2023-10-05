@@ -1,17 +1,23 @@
 package web
 
 import (
-	"database/sql"
+	"errors"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"runtime/debug"
+
+	"github.com/milkymilky0116/go-std-backend/internal/models"
 )
 
 type Application struct {
-	ServerLogger *log.Logger
-	ErrorLogger  *log.Logger
-	DB           *sql.DB
+	ServerLogger   *log.Logger
+	ErrorLogger    *log.Logger
+	Gists          *models.GistModel
+	Users          *models.UserModel
+	TemplateCache  map[string]*template.Template
+	IsTemplateMode bool
 }
 
 func (app *Application) Logger(w http.ResponseWriter, context string) {
@@ -28,5 +34,8 @@ func (app *Application) ClientError(w http.ResponseWriter, status int) {
 }
 
 func (app *Application) NotFound(w http.ResponseWriter) {
+	app.ErrorLogger.Println("Not Found")
 	app.ClientError(w, http.StatusNotFound)
 }
+
+var ErrNoRecords = errors.New("models: no matching record found")
