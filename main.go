@@ -20,11 +20,13 @@ func main() {
 
 	infoLog := log.New(os.Stdout, blue("INFO\t"), log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stdout, red("ERROR\t"), log.Ldate|log.Ltime|log.Lshortfile)
+
 	c, err := cli.ParseArgs(os.Stderr, os.Args[1:])
 	if err != nil {
 		infoLog.Println(err)
 		os.Exit(1)
 	}
+
 	db, err := db.DBinit(c)
 	if err != nil {
 		errorLog.Println(err)
@@ -32,6 +34,7 @@ func main() {
 	}
 	infoLog.Println("DB Connected!")
 	defer db.Close()
+
 	app := &web.Application{
 		ServerLogger:   infoLog,
 		ErrorLogger:    errorLog,
@@ -39,6 +42,7 @@ func main() {
 		Users:          &models.UserModel{DB: db},
 		IsTemplateMode: c.IsTemplateMode,
 	}
+
 	mux := app.InitRoutes()
 	defaultMode := "API Mode"
 	if app.IsTemplateMode {
@@ -49,7 +53,7 @@ func main() {
 		}
 		app.TemplateCache = templateCache
 	}
-	mux.Use(app.HTTPLogger)
+
 	srv := &http.Server{
 		Addr:     ":4000",
 		ErrorLog: errorLog,

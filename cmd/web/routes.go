@@ -20,6 +20,12 @@ func (app *Application) InitRoutes() *mux.Router {
 		s.HandleFunc("/gists/view/{id:[0-9]+}", app.ApiViewOneGists)
 		s.HandleFunc("/gists/create", app.ApiCreateGist)
 	}
-
+	mux.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		app.NotFound(w)
+	})
+	mux.Use(app.RecoverPanics)
+	mux.Use(app.HTTPLogger)
+	mux.Use(app.ContentTypeHeader)
+	mux.Use(app.SecureHeaders)
 	return mux
 }
