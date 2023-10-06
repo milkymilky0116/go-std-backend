@@ -1,0 +1,21 @@
+{{define "title"}}Create a New Snippet{{end}} {{define "main"}}
+<form action="/gists/create" method="POST">
+  <div>
+    <label>Title:</label>
+    {{with .Form.FieldErrors.title}}
+    <label class="error">{{.}}</label>
+    {{end}}
+    <input type="text" name="title" />
+  </div>
+  <div>
+    <label>Content:</label>
+    {{with .Form.FieldErrors.content}}
+    <label class="error">{{.}}</label>
+    {{end}}
+    <textarea name="content"></textarea>
+  </div>
+  <div>
+    <input type="submit" value="Publish snippet" />
+  </div>
+</form>
+{{end}}

@@ -45,3 +45,10 @@ func (app *Application) RecoverPanics(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+func (app *Application) CurrentUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Header.Set("current_user", "1")
+		next.ServeHTTP(w, r)
+	})
+}

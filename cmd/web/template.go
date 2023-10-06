@@ -1,6 +1,7 @@
 package web
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"html/template"
@@ -10,7 +11,15 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/milkymilky0116/go-std-backend/internal/models"
+	"github.com/milkymilky0116/go-std-backend/internal/validator"
 )
+
+type gistCreateForm struct {
+	Title               string `form:"title"`
+	Content             string `form:"content"`
+	validator.Validator `form:"-"`
+}
 
 func humanDate(t time.Time) string {
 	return t.Format("2006 Jan 02 at 15:04")
@@ -62,15 +71,16 @@ func (app *Application) TemplateHome(w http.ResponseWriter, r *http.Request) {
 
 func (app *Application) TemplateViewOneGists(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	data := app.newTemplateData(r)
 	if vars != nil {
 		id, err := strconv.Atoi(vars["id"])
 		if err != nil {
 			app.ServerError(w, err)
 		}
-		data := app.newTemplateData(r)
+
 		gist, err := app.Gists.FindOne(id)
 		if err != nil {
-			if errors.Is(err, ErrNoRecords) {
+			if errors.Is(err, sql.ErrNoRows) {
 				app.NotFound(w)
 			} else {
 				app.ServerError(w, err)
@@ -78,14 +88,53 @@ func (app *Application) TemplateViewOneGists(w http.ResponseWriter, r *http.Requ
 			return
 		}
 		data.Gist = gist
-		app.render(w, http.StatusOK, "view.tmpl.html", data)
 	}
+	app.render(w, http.StatusOK, "view.tmpl.html", data)
 }
 
 func (app *Application) TemplateViewAllGists(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "View all Gist")
 }
 
-func (app *Application) TemplateCreateGist(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Create gist...")
+func (app *Application) TemplateCreateGistGet(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	data.Form = gistCreateForm{
+		Title:   "",
+		Content: "",
+	}
+	app.render(w, http.StatusOK, "create.tmpl.html", data)
+}
+
+func (app *Application) TemplateCreateGistPost(w http.ResponseWriter, r *http.Request) {
+	current_id, err := strconv.Atoi(r.Header.Get("current_user"))
+	if err != nil {
+		app.ServerError(w, err)
+		return
+	}
+	var form gistCreateForm
+	err = app.decodePostForm(r, &form)
+	if err != nil {
+		app.ClientError(w, http.StatusBadRequest)
+		return
+	}
+	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank.")
+	form.CheckField(validator.MaxChars(form.Title, 128), "title", "This field cannot be more than 100 characters long.")
+	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank.")
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, http.StatusUnprocessableEntity, "create.tmpl.html", data)
+		return
+	}
+	params := &models.GistParam{
+		Title:   form.Title,
+		Content: form.Content,
+		Writer:  current_id,
+	}
+	id, err := app.Gists.Insert(*params)
+	if err != nil {
+		app.ServerError(w, err)
+		return
+	}
+	http.Redirect(w, r, fmt.Sprintf("/gists/view/%d", id), http.StatusSeeOther)
 }

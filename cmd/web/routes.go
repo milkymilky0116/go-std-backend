@@ -12,7 +12,8 @@ func (app *Application) InitRoutes() *mux.Router {
 	if app.IsTemplateMode {
 		mux.HandleFunc("/", app.TemplateHome)
 		mux.HandleFunc("/gists/view/{id:[0-9]+}", app.TemplateViewOneGists)
-		mux.HandleFunc("/gists/create", app.TemplateCreateGist)
+		mux.HandleFunc("/gists/create", app.TemplateCreateGistGet).Methods("GET")
+		mux.HandleFunc("/gists/create", app.TemplateCreateGistPost).Methods("POST")
 	} else {
 		s := mux.PathPrefix("/api").Subrouter()
 		s.HandleFunc("/", app.ApiHome)
@@ -26,6 +27,7 @@ func (app *Application) InitRoutes() *mux.Router {
 	mux.Use(app.RecoverPanics)
 	mux.Use(app.HTTPLogger)
 	mux.Use(app.ContentTypeHeader)
+	mux.Use(app.CurrentUser)
 	mux.Use(app.SecureHeaders)
 	return mux
 }

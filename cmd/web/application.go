@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
+	"github.com/go-playground/form"
 	"github.com/milkymilky0116/go-std-backend/internal/models"
 )
 
@@ -18,6 +19,7 @@ type Application struct {
 	Users          *models.UserModel
 	TemplateCache  map[string]*template.Template
 	IsTemplateMode bool
+	FormDecoder    *form.Decoder
 }
 
 func (app *Application) Logger(w http.ResponseWriter, context string) {

@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/fatih/color"
+	"github.com/go-playground/form"
 	"github.com/milkymilky0116/go-std-backend/cmd/cli"
 	"github.com/milkymilky0116/go-std-backend/cmd/db"
 	"github.com/milkymilky0116/go-std-backend/cmd/web"
@@ -34,13 +35,14 @@ func main() {
 	}
 	infoLog.Println("DB Connected!")
 	defer db.Close()
-
+	formDecoder := form.NewDecoder()
 	app := &web.Application{
 		ServerLogger:   infoLog,
 		ErrorLogger:    errorLog,
 		Gists:          &models.GistModel{DB: db},
 		Users:          &models.UserModel{DB: db},
 		IsTemplateMode: c.IsTemplateMode,
+		FormDecoder:    formDecoder,
 	}
 
 	mux := app.InitRoutes()

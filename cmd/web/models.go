@@ -6,4 +6,5 @@ type TemplateData struct {
 	CurrentYear int
 	Gist        *models.Gist
 	Gists       []*models.Gist
+	Form        any
 }
